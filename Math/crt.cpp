@@ -1,34 +1,45 @@
 ll exgcd(ll a, ll b, ll& x, ll& y){
-    if(b == 0){
-        x = 1;
-        y = 0;
-        return a;
-    }
-    ll d = exgcd(b, a % b, y, x);
-    y -= a / b * x;
+    if(b == 0){ x = 1; y = 0; return a >= 0 ? a : -a; }
+    ll x1, y1;
+    ll d = exgcd(b, a % b, x1, y1);
+    x = y1;
+    y = x1 - (a / b) * y1;
     return d;
 }
 
-ll crt(vector<ll> a, vector<ll> m){
-    ll x = 0, m1 = m[0], a1 = a[0];
+static inline ll norm(ll a, ll m){
+    m = llabs(m);
+    a %= m;
+    if(a < 0) a += m;
+    return a;
+}
 
-    for(int i = 1; i < a.size(); i++){
-        ll m2 = m[i], a2 = a[i], k1 = 0, k2 = 0;
-        ll d = exgcd(m1, m2, k1, k2);
-        if((a2 - a1) % d > 0){
-            x = -1;
-            break;
+ll crt(const vector<ll>& a, const vector<ll>& m){
+    int n = (int)a.size();
+    if(n == 0) return 0;
+
+    ll a1 = a[0], m1 = m[0];
+    m1 = llabs(m1);
+    a1 = norm(a1, m1);
+
+    for(int i = 1; i < n; ++i){
+        ll a2 = norm(a[i], m[i]), m2 = std::llabs(m[i]);
+        ll p, q;
+        ll d = exgcd(m1, m2, p, q);     
+        ll diff = a2 - a1;
+        if(diff % d != 0){
+            return -1;     
         }
-        k1 *= (a2 - a1) / d;
-        k1 = (k1 % (m2 / d) + m2 / d) % (m2 / d);
-        x = k1 * m1 + a1;
-        ll c = fabs(m1 / d * m2);
-        a1 = k1 * m1 + a1;
-        m1 = c;
-    }
 
-    if(x != -1){
-        x = (a1 % m1 + m1) % m1;
+        ll mod = m2 / d;
+        i128 t = (i128)(diff / d) * p;
+        ll k = (ll)((t % mod + mod) % mod);
+
+        a1 = (ll)((i128)a1 + (i128)k * m1);
+        i128 M = (i128)(m1 / d) * m2;
+        a1 %= (ll)M;
+        if(a1 < 0) a1 += (ll)M;
+        m1 = (ll)M;
     }
-    return x;
+    return a1;
 }
